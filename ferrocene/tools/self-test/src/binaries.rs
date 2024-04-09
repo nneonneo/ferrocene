@@ -14,8 +14,33 @@ use crate::utils::run_command;
 ///
 /// Some binaries are optional and only warn when not present.
 pub(crate) fn check(reporter: &dyn Reporter, sysroot: &Path) -> Result<(), Error> {
+    // CHECK rustc
+    //
+    // check_file
+    // - rustc exists
+    // - it is a file
+    // - it has sufficient permissions
+    // - we have permission to fetch metadata from it
+    //
+    // run_command
+    // - `rustc -vV` can be spawned
+    // - the execution terminates (or whatever the error cases of wait_with_output are)
+    // - the execution terminates successfully
+    // - the output is utf-8
+    //
+    // parse_version_output
+    // - the output can be parsed as VersionOutput
+    //
+    // check_version
+    // - target_triple, release version and commit hash match between rustc and ferrocene-self-test
     check_binary(reporter, sysroot, "rustc", CommitHashOf::Rust)?;
+    // CHECK rustdoc
+    //
+    // same checks as rustc
     check_binary(reporter, sysroot, "rustdoc", CommitHashOf::Rust)?;
+    // CHECK cargo
+    //
+    // same checks as rustc, but only emit a log message and continue execution afterwards
     check_optional_binary(reporter, sysroot, "cargo", CommitHashOf::Cargo)?;
 
     Ok(())
@@ -48,26 +73,26 @@ fn check_file(bin: &Path, bin_dir: &Path, name: &str) -> Result<(), Error> {
     match std::fs::metadata(bin) {
         Ok(metadata) => {
             if !metadata.is_file() {
-                Err(Error::MissingBinary { directory: bin_dir.into(), name: name.into() }) // CHECK that bin is a file and not a dir or symlink
+                Err(Error::MissingBinary { directory: bin_dir.into(), name: name.into() })
             } else if metadata.permissions().mode() & MODE != MODE {
-                Err(Error::WrongBinaryPermissions { path: bin.into() }) // CHECK that bin has sufficient permissions
+                Err(Error::WrongBinaryPermissions { path: bin.into() })
             } else {
                 Ok(())
             }
         }
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
-            Err(Error::MissingBinary { directory: bin_dir.into(), name: name.into() }) // CHECK that binary exists
+            Err(Error::MissingBinary { directory: bin_dir.into(), name: name.into() })
         }
-        Err(err) => Err(Error::MetadataFetchFailed { path: bin.into(), error: err }), // CHECK that we can fetch metadata, if not we are likely lacking permissions
+        Err(err) => Err(Error::MetadataFetchFailed { path: bin.into(), error: err }),
     }
 }
 
 fn get_version(bin: &Path, name: &str) -> Result<VersionOutput, Error> {
     let version_command_output = run_command(Command::new(bin).arg("-vV")).map_err(|error| {
-        Error::VersionFetchFailed { binary: name.into(), error: Box::new(error) } // CHECK; this error just bubbles up the checks from run_command
+        Error::VersionFetchFailed { binary: name.into(), error: Box::new(error) }
     })?;
     parse_version_output(&version_command_output.stdout)
-        .ok_or_else(|| Error::VersionParseFailed { binary: name.into() }) // CHECK that we can parse the version out
+        .ok_or_else(|| Error::VersionParseFailed { binary: name.into() })
 }
 
 fn parse_version_output(output: &str) -> Option<VersionOutput> {
@@ -104,7 +129,7 @@ fn check_version(version: VersionOutput, hash: CommitHashOf, name: &str) -> Resu
                 field: field.into(),
                 expected: expected.into(),
                 found,
-            }); // CHECK that the found host (target triple), release (version) and commit hash match with the expected one
+            });
         }
     }
     Ok(())
