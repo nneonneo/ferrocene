@@ -20,23 +20,23 @@ pub(crate) fn run_command(command: &mut Command) -> Result<CommandOutput, Comman
                 path,
                 args,
                 kind: CommandErrorKind::StartupFailed { error },
-            });
+            }); // CHECK that we can execute the command
         }
     };
     let output = match child.wait_with_output() {
         Ok(output) => output,
         Err(error) => {
             return Err(CommandError { path, args, kind: CommandErrorKind::WaitFailed { error } });
-        }
+        } // CHECK that command terminates (not necessarily successfully)
     };
 
     if output.status.success() {
         match String::from_utf8(output.stdout) {
             Ok(stdout) => Ok(CommandOutput { stdout }),
-            Err(_) => Err(CommandError { path, args, kind: CommandErrorKind::NonUtf8Output }),
+            Err(_) => Err(CommandError { path, args, kind: CommandErrorKind::NonUtf8Output }), // CHECK that command output is utf-8
         }
     } else {
-        Err(CommandError { path, args, kind: CommandErrorKind::Failure { output } })
+        Err(CommandError { path, args, kind: CommandErrorKind::Failure { output } }) // CHECK that command was successful
     }
 }
 

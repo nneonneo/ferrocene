@@ -48,26 +48,26 @@ fn check_file(bin: &Path, bin_dir: &Path, name: &str) -> Result<(), Error> {
     match std::fs::metadata(bin) {
         Ok(metadata) => {
             if !metadata.is_file() {
-                Err(Error::MissingBinary { directory: bin_dir.into(), name: name.into() })
+                Err(Error::MissingBinary { directory: bin_dir.into(), name: name.into() }) // CHECK that bin is a file and not a dir or symlink
             } else if metadata.permissions().mode() & MODE != MODE {
-                Err(Error::WrongBinaryPermissions { path: bin.into() })
+                Err(Error::WrongBinaryPermissions { path: bin.into() }) // CHECK that bin has sufficient permissions
             } else {
                 Ok(())
             }
         }
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
-            Err(Error::MissingBinary { directory: bin_dir.into(), name: name.into() })
+            Err(Error::MissingBinary { directory: bin_dir.into(), name: name.into() }) // CHECK that binary exists
         }
-        Err(err) => Err(Error::MetadataFetchFailed { path: bin.into(), error: err }),
+        Err(err) => Err(Error::MetadataFetchFailed { path: bin.into(), error: err }), // CHECK that we can fetch metadata, if not we are likely lacking permissions
     }
 }
 
 fn get_version(bin: &Path, name: &str) -> Result<VersionOutput, Error> {
     let version_command_output = run_command(Command::new(bin).arg("-vV")).map_err(|error| {
-        Error::VersionFetchFailed { binary: name.into(), error: Box::new(error) }
+        Error::VersionFetchFailed { binary: name.into(), error: Box::new(error) } // CHECK; this error just bubbles up the checks from run_command
     })?;
     parse_version_output(&version_command_output.stdout)
-        .ok_or_else(|| Error::VersionParseFailed { binary: name.into() })
+        .ok_or_else(|| Error::VersionParseFailed { binary: name.into() }) // CHECK that we can parse the version out
 }
 
 fn parse_version_output(output: &str) -> Option<VersionOutput> {
@@ -104,7 +104,7 @@ fn check_version(version: VersionOutput, hash: CommitHashOf, name: &str) -> Resu
                 field: field.into(),
                 expected: expected.into(),
                 found,
-            });
+            }); // CHECK that the found host (target triple), release (version) and commit hash match with the expected one
         }
     }
     Ok(())

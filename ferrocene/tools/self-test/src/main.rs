@@ -21,7 +21,7 @@ use crate::utils::get_sysroot;
 fn main_inner(reporter: &dyn Reporter) -> Result<(), Error> {
     let env = Env::gather();
 
-    let sysroot = get_sysroot().ok_or(Error::NoSysroot)?;
+    let sysroot = get_sysroot().ok_or(Error::NoSysroot)?; // CHECK that sysroot exists
     reporter.info(&format!("using sysroot {}", sysroot.display()));
 
     binaries::check(reporter, &sysroot)?;

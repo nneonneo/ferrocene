@@ -76,7 +76,7 @@ fn check_target(
     let temp = tempfile::Builder::new()
         .prefix("fst-")
         .tempdir()
-        .map_err(|error| Error::TemporaryCompilationDirectoryCreationFailed { error })?;
+        .map_err(|error| Error::TemporaryCompilationDirectoryCreationFailed { error })?; // CHECK that we can create temporary directory
 
     let ctx = Context::new(target, sysroot, &temp);
     create_tmp_compilation_dir(&ctx.source_dir)?;
@@ -108,6 +108,7 @@ fn check_target(
 fn create_tmp_compilation_dir(path: &Path) -> Result<(), Error> {
     std::fs::create_dir_all(path)
         .map_err(|error| Error::TemporaryCompilationDirectoryCreationFailed { error })
+    // CHECK that we can create temporary directory
 }
 
 fn compile(ctx: &Context<'_>, program: &SampleProgram) -> Result<(), Error> {
@@ -118,7 +119,7 @@ fn compile(ctx: &Context<'_>, program: &SampleProgram) -> Result<(), Error> {
             dest: program_path.clone(),
             error,
         }
-    })?;
+    })?; // CHECK that we can write to the source directory
 
     let mut remap_path_prefix = OsString::new();
     remap_path_prefix.push(&ctx.temp_dir);
@@ -137,7 +138,7 @@ fn compile(ctx: &Context<'_>, program: &SampleProgram) -> Result<(), Error> {
     cmd.arg(&program_path);
 
     run_command(&mut cmd)
-        .map_err(|error| Error::sample_program_compilation_failed(program.name, error))?;
+        .map_err(|error| Error::sample_program_compilation_failed(program.name, error))?; // CHECK that we can compile program
 
     Ok(())
 }
@@ -150,13 +151,13 @@ fn run(ctx: &Context<'_>, program: &SampleProgram, expected_output: &[u8]) -> Re
     let mut cmd = Command::new(bin_path);
     let output = cmd
         .output()
-        .map_err(|error| Error::RunningSampleProgramFailed { name: program.name.into(), error })?;
+        .map_err(|error| Error::RunningSampleProgramFailed { name: program.name.into(), error })?; // CHECK that we can run program
     if output.stdout != expected_output {
         Err(Error::SampleProgramOutputWrong {
             name: program.name.into(),
             expected: expected_output.to_vec(),
             found: output.stdout,
-        })
+        }) // CHECK that output matches expected output
     } else {
         Ok(())
     }
@@ -181,7 +182,7 @@ impl ExpectedFiles {
         let mut currently_expected = self.expected.clone();
 
         let map_err =
-            |error| Error::CompilationArtifactsListingFailed { path: self.path.clone(), error };
+            |error| Error::CompilationArtifactsListingFailed { path: self.path.clone(), error }; // CHECK that we can read the directory and can read the file
         for entry in std::fs::read_dir(&self.path).map_err(map_err)? {
             let entry = entry.map_err(map_err)?;
             let file_name = entry
@@ -194,7 +195,7 @@ impl ExpectedFiles {
                 return Err(Error::UnexpectedCompilationArtifact {
                     name: file_name,
                     after_compiling: after_compiling.into(),
-                });
+                }); // CHECK that there are no unexpected compilation artifacts
             }
         }
 
@@ -205,7 +206,7 @@ impl ExpectedFiles {
             Err(Error::MissingCompilationArtifact {
                 name: missing_file.to_string(),
                 after_compiling: after_compiling.into(),
-            })
+            }) // CHECK that no expected compilation artifact is missing (was not created)
         } else {
             Ok(())
         }
