@@ -50,6 +50,10 @@ impl Deref for Target {
 
 /// Check which of the supported targets are installed.
 pub(crate) fn check(reporter: &dyn Reporter, sysroot: &Path) -> Result<Vec<Target>, Error> {
+    /// CHECK for each target
+    ///     CHECK that we can read target libraries
+    ///     CHECK that there are no duplicate libraries
+    ///     CHECK that all expected libraries are present
     SUPPORTED_TARGETS.iter().try_fold(Vec::new(), |mut found, target| {
         match check_target(reporter, sysroot, target)? {
             CheckTargetOutcome::Missing => {}
@@ -92,7 +96,7 @@ fn check_libraries(target: &TargetSpec, target_dir: &Path, expected: &[&str]) ->
     let mut expected_to_find = expected.iter().cloned().collect::<HashSet<_>>();
     for (library, count) in find_libraries_in(&lib_dir)?.into_iter() {
         if count > 1 {
-            return Err(Error::DuplicateTargetLibrary { target: target.triple.into(), library }); // CHECK that there are no duplicate libraries
+            return Err(Error::DuplicateTargetLibrary { target: target.triple.into(), library });
         }
         expected_to_find.remove(library.as_str());
     }
@@ -101,7 +105,7 @@ fn check_libraries(target: &TargetSpec, target_dir: &Path, expected: &[&str]) ->
         Err(Error::TargetLibraryMissing {
             target: target.triple.into(),
             library: library.to_string(),
-        }) // CHECK that all expected libraries are present
+        })
     } else {
         Ok(())
     }
@@ -111,9 +115,7 @@ fn find_libraries_in(path: &Path) -> Result<HashMap<String, usize>, Error> {
     let map_err = |e| Error::TargetLibraryDiscoveryFailed { path: path.into(), error: e };
 
     let mut found = HashMap::new();
-    // CHECK that we can read the directory
     for entry in path.read_dir().map_err(map_err)? {
-        // CHECK that we can access the entries in the directory
         let path = entry.map_err(map_err)?.path();
         if !path.is_file() {
             continue;

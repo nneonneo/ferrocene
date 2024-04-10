@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: The Ferrocene Developers
 
+#![allow(unused_doc_comments)]
+
 mod binaries;
 mod compile;
 mod env;
