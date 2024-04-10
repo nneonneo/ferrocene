@@ -64,30 +64,30 @@ pub(crate) fn check(
     sysroot: &Path,
     targets: &[Target],
 ) -> Result<(), Error> {
-    // CHECK each sample program for each target
-    //
-    // - we can create a temporary directory
-    // - we can create a temporary directory in that directory
-    // - we can write to the temporary directory
-    //
-    // compile
-    // - we can write to the temporary directory
-    //
-    // run_command
-    // - the compilation command can be spawned
-    // - the execution terminates (or whatever the error cases of wait_with_output are)
-    // - the execution terminates successfully
-    // - the output is utf-8
-    //
-    // ExpectedFiles::check
-    // - check that we can read the files in the directory
-    // - check that all paths are utf-8
-    // - check that no unexpected compilation artifact is present
-    // - check that all expected compilation artifacts are present
-    //
-    // run (only for host platform)
-    // - sample program which can be executed, can be executed
-    // - output matches expected output
+    /// CHECK each sample program for each target
+    ///
+    /// - we can create a temporary directory
+    /// - we can create a temporary directory in that directory
+    /// - we can write to the temporary directory
+    ///
+    /// compile
+    /// - we can write to the temporary directory
+    ///
+    /// run_command
+    /// - the compilation command can be spawned
+    /// - the execution terminates (or whatever the error cases of wait_with_output are)
+    /// - the execution terminates successfully
+    /// - the output is utf-8
+    ///
+    /// ExpectedFiles::check
+    /// - check that we can read the files in the directory
+    /// - check that all paths are utf-8
+    /// - check that no unexpected compilation artifact is present
+    /// - check that all expected compilation artifacts are present
+    ///
+    /// run (only for host platform)
+    /// - sample program which can be executed, can be executed
+    /// - output matches expected output
     targets.iter().try_for_each(|target| check_target(reporter, sysroot, target, SAMPLE_PROGRAMS))
 }
 

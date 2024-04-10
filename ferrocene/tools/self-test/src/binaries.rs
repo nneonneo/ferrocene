@@ -14,33 +14,33 @@ use crate::utils::run_command;
 ///
 /// Some binaries are optional and only warn when not present.
 pub(crate) fn check(reporter: &dyn Reporter, sysroot: &Path) -> Result<(), Error> {
-    // CHECK rustc
-    //
-    // check_file
-    // - rustc exists
-    // - it is a file
-    // - it has sufficient permissions
-    // - we have permission to fetch metadata from it
-    //
-    // run_command
-    // - `rustc -vV` can be spawned
-    // - the execution terminates (or whatever the error cases of wait_with_output are)
-    // - the execution terminates successfully
-    // - the output is utf-8
-    //
-    // parse_version_output
-    // - the output can be parsed as VersionOutput
-    //
-    // check_version
-    // - target_triple, release version and commit hash match between rustc and ferrocene-self-test
+    /// CHECK rustc
+    ///
+    /// check_file
+    /// - rustc exists
+    /// - it is a file
+    /// - it has sufficient permissions
+    /// - we have permission to fetch metadata from it
+    ///
+    /// run_command
+    /// - `rustc -vV` can be spawned
+    /// - the execution terminates (or whatever the error cases of wait_with_output are)
+    /// - the execution terminates successfully
+    /// - the output is utf-8
+    ///
+    /// parse_version_output
+    /// - the output can be parsed as VersionOutput
+    ///
+    /// check_version
+    /// - target_triple, release version and commit hash match between rustc and ferrocene-self-test
     check_binary(reporter, sysroot, "rustc", CommitHashOf::Rust)?;
-    // CHECK rustdoc
-    //
-    // same checks as rustc
+    /// CHECK rustdoc
+    ///
+    /// same checks as rustc
     check_binary(reporter, sysroot, "rustdoc", CommitHashOf::Rust)?;
-    // CHECK cargo
-    //
-    // same checks as rustc, but only emit a log message and continue execution afterwards
+    /// CHECK cargo
+    ///
+    /// same checks as rustc, but only emit a log message and continue execution afterwards
     check_optional_binary(reporter, sysroot, "cargo", CommitHashOf::Cargo)?;
 
     Ok(())
