@@ -42,6 +42,24 @@ pub(crate) fn check_and_add_rustflags(
     sysroot: &Path,
     targets: &mut [Target],
 ) -> Result<(), Error> {
+    /// CHECK that rust-lld is present in the expected path
+    /// CHECK that ld.lld is present in the expected path
+    ///
+    /// CHECK for each target
+    ///     CHECK that we can create temporary directory
+    ///     CHECK that a suitable C compiler is installed and findable
+    ///     
+    ///     CHECK linker args (does not abort, only logs note)
+    ///         CHECK that we don't receive linker plugin options
+    ///         CHECK that we don't receive unknown linker arguments
+    ///         CHECK that we don't receive linker plugin
+    ///     CHECK that we can basic c program with the system compiler
+    ///     CHECK that we can link with the fake linker
+    ///         CHECK that the linker args file was created
+    ///         CHECK that the linker args file is utf-8
+    ///         CHECK that linker arg file is not empty
+    ///         CHECK that the fake linker arg was passed on
+    ///     
     // Step 1. Check we have ld.lld available
     let _rust_lld_path = find_bundled_lld(reporter, sysroot)?;
     let lld_bin = find_bundled_lld_wrapper(reporter, sysroot)?;
@@ -68,7 +86,6 @@ pub(crate) fn check_and_add_rustflags(
                 //     or we run out of flags to give the C compiler
                 'arg_loop: loop {
                     let temp_dir = tempfile::tempdir().map_err(|error| {
-                        // CHECK that we can create temporary directory
                         Error::TemporaryCompilationDirectoryCreationFailed { error }
                     })?;
                     let compiler_name = format!("{cc_prefix}{compiler_kind}");
@@ -133,7 +150,6 @@ pub(crate) fn check_and_add_rustflags(
                 }
             }
         }
-        // CHECK that a suitable C compiler is installed and findable
         return Err(Error::SuitableCCompilerNotFound { target: target.triple.into() });
     }
 
@@ -172,7 +188,7 @@ where
                 return Err(Error::WrongLinkerArgs {
                     target: target.into(),
                     kind: LinkerArgsErrorKind::DisallowedPlugin,
-                }); // CHECK that we don't receive linker plugin options
+                });
             }
             LinkerArg::LittleEndian => {}
             LinkerArg::PicExecutable => {}
@@ -195,7 +211,7 @@ where
                 return Err(Error::WrongLinkerArgs {
                     target: target.into(),
                     kind: LinkerArgsErrorKind::UnknownArgument,
-                }); // CHECK, that we don't receive unknown linker arguments
+                });
             }
             LinkerArg::Plugin(_plugin) => {
                 // Hmm, we don't want plugins.
@@ -204,7 +220,7 @@ where
                     return Err(Error::WrongLinkerArgs {
                         target: target.into(),
                         kind: LinkerArgsErrorKind::DisallowedPlugin,
-                    }); // CHECK that we don't receive linker plugin
+                    });
                 }
                 // Try again with LTO disabled.
                 compiler_args.push("-fno-lto".into());
@@ -234,7 +250,7 @@ fn check_system_compiler(
     extra_args: &[String],
 ) -> Result<(PathBuf, Vec<String>), Error> {
     let cc_path = find_binary_in_path(env, compiler_name)
-        .map_err(|error| Error::CCompilerNotFound { name: compiler_name.into(), error })?; // CHECK that compiler is installed and findable
+        .map_err(|error| Error::CCompilerNotFound { name: compiler_name.into(), error })?;
 
     // Part 1. Check with the real ld.lld - can we make a binary?
 
@@ -296,8 +312,7 @@ fn cross_compile_test_program(
     let _output = run_command(&mut cc_child).map_err(|error| {
         let cc_name =
             cc_path.file_name().and_then(|p| p.to_str()).unwrap_or("<non UTF-8 compiler name>");
-        Error::sample_program_compilation_failed(cc_name, error) // CHECK that we can link something with the system compiler
-                                                                 // Is this the correct error, since it is not really a sample program?
+        Error::sample_program_compilation_failed(cc_name, error)
     })?;
 
     Ok(())
@@ -354,7 +369,7 @@ fn make_fake_linker(temp_dir: &Path) -> Result<PathBuf, Error> {
     cc_child.args(&args);
 
     let _output = run_command(&mut cc_child)
-        .map_err(|error| Error::sample_program_compilation_failed("cc", error))?; // CHECK that we can link with the fake linker
+        .map_err(|error| Error::sample_program_compilation_failed("cc", error))?;
 
     Ok(args_file)
 }
@@ -388,13 +403,13 @@ fn check_compiler_linker_args(
             target: target.into(),
             kind: LinkerArgsErrorKind::NoArgsFile,
         });
-    }; // CHECK that the linker args file was created
+    };
     let Ok(args_str) = std::str::from_utf8(&args_file) else {
         return Err(Error::WrongLinkerArgs {
             target: target.into(),
             kind: LinkerArgsErrorKind::InvalidArgsFile,
         });
-    }; // CHECK that the linker args file is utf-8
+    };
 
     // parse the file
     let args: Vec<String> = args_str.lines().map(|s| s.into()).collect();
@@ -404,10 +419,10 @@ fn check_compiler_linker_args(
         Err(Error::WrongLinkerArgs {
             target: target.into(),
             kind: LinkerArgsErrorKind::EmptyArgsFile,
-        }) // CHECK that linker arg file is not empty
+        })
     } else if args.iter().filter(|s| s.as_str() == RANDOM_LINKER_ARG).count() != 1 {
         // Check the C compiler passed on our -Wl,<arg> argument exactly once.
-        Err(Error::WrongLinkerArgs { target: target.into(), kind: LinkerArgsErrorKind::MissingArg }) // CHECK that the fake linker arg was passed on
+        Err(Error::WrongLinkerArgs { target: target.into(), kind: LinkerArgsErrorKind::MissingArg })
     } else {
         Ok(args)
     }
@@ -422,7 +437,7 @@ fn find_bundled_lld(reporter: &dyn Reporter, sysroot: &Path) -> Result<PathBuf, 
         reporter.success("bundled linker detected");
         Ok(path)
     } else {
-        Err(Error::BundledLinkerMissing) // CHECK that rust-lld is present in the expected path
+        Err(Error::BundledLinkerMissing)
     }
 }
 
@@ -440,7 +455,7 @@ fn find_bundled_lld_wrapper(reporter: &dyn Reporter, sysroot: &Path) -> Result<P
         reporter.success("bundled linker-wrapper detected");
         Ok(path)
     } else {
-        Err(Error::BundledLinkerMissing) // CHECK that ld.lld is present in the expected path
+        Err(Error::BundledLinkerMissing)
     }
 }
 
