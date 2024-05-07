@@ -778,6 +778,7 @@ impl<'a> Builder<'a> {
                 crate::ferrocene::test::CheckDocumentSignatures,
                 crate::ferrocene::test::GenerateTarball,
                 crate::ferrocene::code_coverage::ProfilerBuiltinsNoCore,
+                crate::ferrocene::test::flip_link::FlipLink,
                 crate::core::build_steps::toolstate::ToolStateCheck,
                 test::ExpandYamlAnchors,
                 test::Tidy,
