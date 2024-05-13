@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: The Ferrocene Developers
 
 use crate::builder::{Builder, RunConfig, ShouldRun, Step};
+use crate::core::build_steps::compile;
 use crate::core::build_steps::tool::{self, SourceType};
 use crate::core::config::TargetSelection;
 use crate::Mode;
@@ -27,12 +28,17 @@ impl Step for FlipLink {
     }
 
     fn run(self, builder: &Builder<'_>) -> Self::Output {
+        // enable cross-compilation to thumbv7em-none-eabi
+        let compiler = builder.compiler(dbg!(builder.top_stage), self.target);
+        let cc_target = TargetSelection::from_user("thumbv7em-none-eabi");
+        builder.ensure(compile::Std::new(compiler, cc_target));
+
         builder.info(&format!("Testing {PATH}"));
         builder.run(
             &mut tool::prepare_tool_cargo(
                 builder,
-                builder.compiler(0, self.target),
-                Mode::ToolBootstrap,
+                compiler,
+                Mode::ToolRustc,
                 self.target,
                 "test",
                 PATH,
