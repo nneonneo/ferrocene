@@ -255,3 +255,4 @@ RUN <<-EOF
     uv venv
     uv pip sync /tmp/requirements.txt
 EOF
+ENV VIRTUAL_ENV="/home/ci/.venv"
