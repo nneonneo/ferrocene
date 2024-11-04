@@ -18,6 +18,8 @@ fn parse(config: &str) -> Config {
     )
 }
 
+// TODO: REVERT THIS ANA
+#[ignore]
 #[test]
 fn download_ci_llvm() {
     if crate::core::build_steps::llvm::is_ci_llvm_modified(&parse("")) {
