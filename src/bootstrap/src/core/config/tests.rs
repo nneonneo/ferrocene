@@ -18,7 +18,7 @@ fn parse(config: &str) -> Config {
     )
 }
 
-// TODO: REVERT THIS ANA
+// FIXME: REVERT THIS ANA
 #[ignore]
 #[test]
 fn download_ci_llvm() {
