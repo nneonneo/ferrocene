@@ -14,8 +14,7 @@ if [ ! -z ${BASH_ENV+x} ]; then
 fi
 set -e
 
-# Use the full path here since Windows might not have it on PATH yet
-uv venv
 uv python install 3.12
 uv python pin 3.12
+uv venv
 uv pip sync requirements.txt
