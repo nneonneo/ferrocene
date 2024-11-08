@@ -9,18 +9,11 @@ if command -v uv &> /dev/null; then
     exit 0
 fi
 
-curl -LsSf https://astral.sh/uv/install.sh | sh
+curl -LsSf https://astral.sh/uv/0.5.0/install.sh | sh
 
-source $HOME/.cargo/env
-echo "source $HOME/.cargo/env" >> $BASH_ENV
+echo 'export PATH="$PATH:$HOME/.local/bin"' >> $BASH_ENV
 
-uv venv ~/.venv
-if [[ "${OSTYPE}" = "msys" ]]; then
-    source ~/.venv/Scripts/activate
-    echo "source $HOME/.venv/Scripts/activate" >> $BASH_ENV
-else
-    source ~/.venv/bin/activate
-    echo "source $HOME/.venv/bin/activate" >> $BASH_ENV
-fi
-
+uv venv
+uv python install 3.12
+uv python pin 3.12
 uv pip sync requirements.txt
