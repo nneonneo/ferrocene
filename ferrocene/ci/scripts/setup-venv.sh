@@ -6,11 +6,11 @@ set -xeuo pipefail
 
 curl -LsSf https://astral.sh/uv/0.5.0/install.sh | sh
 
-export PATH="$PATH:$HOME/.local/bin"
-echo 'export PATH="$PATH:$HOME/.local/bin"' >> $BASH_ENV
+source $HOME/.local/bin/env
+echo 'source $HOME/.local/bin/env' >> $BASH_ENV
 
 # Use the full path here since Windows might not have it on PATH yet
-$HOME/.local/bin/uv venv
-$HOME/.local/bin/uv python install 3.12
-$HOME/.local/bin/uv python pin 3.12
-$HOME/.local/bin/uv pip sync requirements.txt
+uv venv
+uv python install 3.12
+uv python pin 3.12
+uv pip sync requirements.txt
